@@ -1,19 +1,25 @@
-// client/src/pages/Home.jsx
+// In your component (e.g., Home.jsx or wherever you fetch blogs)
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function Home() {
   const [blogs, setBlogs] = useState([]);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/blogs');
+        // Log the API URL to verify it's correct
+        console.log('API URL:', import.meta.env.VITE_API_URL + '/api/blogs');
+        
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`);
+        console.log('Response:', response.data); // Log the response
         setBlogs(response.data);
-        setLoading(false);
       } catch (error) {
         console.error('Error fetching blogs:', error);
+        setError(error.message);
+      } finally {
         setLoading(false);
       }
     };
@@ -21,28 +27,21 @@ function Home() {
     fetchBlogs();
   }, []);
 
-  if (loading) return <div className="text-center p-4">Loading...</div>;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Latest Blog Posts</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {blogs.map((blog) => (
-          <div key={blog._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-            {blog.image && (
-              <img src={blog.image} alt={blog.title} className="w-full h-48 object-cover" />
-            )}
-            <div className="p-4">
-              <h2 className="text-xl font-semibold mb-2">{blog.title}</h2>
-              <p className="text-gray-600 mb-4">{blog.content.substring(0, 150)}...</p>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">{new Date(blog.createdAt).toLocaleDateString()}</span>
-                <span className="text-sm text-gray-500">By {blog.author}</span>
-              </div>
-            </div>
+    <div>
+      {blogs.length === 0 ? (
+        <div>No blogs found</div>
+      ) : (
+        blogs.map(blog => (
+          <div key={blog._id}>
+            <h2>{blog.title}</h2>
+            <p>{blog.content}</p>
           </div>
-        ))}
-      </div>
+        ))
+      )}
     </div>
   );
 }
